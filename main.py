@@ -1,9 +1,13 @@
+import os
+import uvicorn
 import telebot
 from config import TOKEN, WEBHOOK_URL
 import  logging
 from handlers.weather import send_weather
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from pyngrok import ngrok
+
 
 logging.basicConfig(level=logging.INFO)
 logger = telebot.logger
@@ -32,9 +36,26 @@ def send_welcome(message):
 def handle_weather(msg):
     send_weather(msg, bot)
 
-if __name__ == '__main__':
+def run_ngrok_local():
+    """启动 ngrok 内网穿透，用于本地调试"""
+    http_tunnel = ngrok.connect('8080')
+    public_url = http_tunnel.public_url
+    # 设置 WEBHOOK_URL 环境变量
+    os.environ['WEBHOOK_URL'] = f'{public_url}/webhook'
+    bot.remove_webhook()
+    # 设置 Webhook
+    bot.set_webhook(url=os.environ['WEBHOOK_URL'])
+    uvicorn.run(app, host='0.0.0.0', port=8080)
+
+def run_vercel():
+    """Vercel 部署"""
     bot.remove_webhook()
     bot.set_webhook(url=WEBHOOK_URL)
-    import uvicorn
+    port = int(os.environ.get('PORT', 8080))
+    uvicorn.run(app, host='0.0.0.0', port=port)
 
-    uvicorn.run(app, host='0.0.0.0', port=8080)
+if __name__ == '__main__':
+    if os.getenv('VERCEL') is not None:
+        run_vercel()
+    else:
+        run_ngrok_local()
