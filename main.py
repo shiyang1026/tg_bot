@@ -17,19 +17,10 @@ telebot.logger.setLevel(logging.INFO)
 bot = telebot.TeleBot(TOKEN)
 app = FastAPI()
 
-@app.get('/', response_class=HTMLResponse)
+@app.get('/')
 async def read_root():
-    html_content = """
-    <html>
-        <head>
-            <title>tg_bot</title>
-        </head>
-        <body>
-            <h1>Bot is running</h1>
-        </body>
-    </html>
-    """
-    return HTMLResponse(content=html_content, media_type="text/html")
+    return {"Hello": "bot"}
+
 @app.post('/webhook')
 async def webhook(request: Request):
     """Set webhook"""
