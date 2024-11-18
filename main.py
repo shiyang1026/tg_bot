@@ -5,7 +5,7 @@ from config import TOKEN, WEBHOOK_URL
 import  logging
 from handlers.weather import send_weather
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from pyngrok import ngrok
 
 
@@ -16,6 +16,19 @@ telebot.logger.setLevel(logging.INFO)
 
 bot = telebot.TeleBot(TOKEN)
 app = FastAPI()
+
+@app.get('/', response_class=HTMLResponse)
+async def read_root():
+    return """
+    <html>
+        <head>
+            <title>tg_bot</title>
+        </head>
+        <body>
+            <h1>Bot is running</h1>
+        </body>
+    </html>
+    """
 
 @app.post('/webhook')
 async def webhook(request: Request):
@@ -40,6 +53,7 @@ def run_ngrok_local():
     """启动 ngrok 内网穿透，用于本地调试"""
     http_tunnel = ngrok.connect('8080')
     public_url = http_tunnel.public_url
+    logger.info(f"Access the root page at: {public_url}")
     # 设置 WEBHOOK_URL 环境变量
     os.environ['WEBHOOK_URL'] = f'{public_url}/webhook'
     bot.remove_webhook()
