@@ -19,7 +19,7 @@ app = FastAPI()
 
 @app.get('/', response_class=HTMLResponse)
 async def read_root():
-    return """
+    html_content = """
     <html>
         <head>
             <title>tg_bot</title>
@@ -29,7 +29,7 @@ async def read_root():
         </body>
     </html>
     """
-
+    return HTMLResponse(content=html_content, media_type="text/html")
 @app.post('/webhook')
 async def webhook(request: Request):
     """Set webhook"""
